@@ -93,7 +93,7 @@ namespace backend.Controllers
                 IsFavorite = favorisIds.Contains(p.Id),
                 Category = p.IdCategorieNavigation is not null ? p.IdCategorieNavigation.Nom : "N/A",
                 Description = p.Description ?? "No description here",
-                Quantity = p.Quantite
+                Stock = p.Stock
             }).ToList();
 
             return Ok(new {produitDTOs });
@@ -113,7 +113,7 @@ namespace backend.Controllers
                 IsFavorite = favorisIds.Contains(p.Id),
                 Category = p.IdCategorieNavigation is not null ? p.IdCategorieNavigation.Nom : "N/A",
                 Description = p.Description ?? "No description here",
-                Quantity = p.Quantite
+                Stock = p.Stock
             });
             return Ok(new { produitDTOs });
         }

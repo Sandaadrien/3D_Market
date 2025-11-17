@@ -12,6 +12,13 @@ var FacConnectionString = builder.Configuration.GetConnectionString("DefaultConn
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 
+builder.Services.AddControllers().AddJsonOptions(x =>
+{
+    x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    x.JsonSerializerOptions.WriteIndented = true;
+});
+
+
 /* -----------------CORS !!!!!--------------------- */
 builder.Services.AddCors(options =>
 {

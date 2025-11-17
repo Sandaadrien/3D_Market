@@ -15,7 +15,7 @@ namespace backend.DTOs
         public bool IsFavorite { get; set; }
         public string Category { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public long Quantity { get; set; }
+        public long Stock { get; set; }
 
     }
     public class ToggleFavoriteDTOs

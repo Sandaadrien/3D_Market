@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Models;
 
@@ -8,6 +10,8 @@ namespace backend.Models;
 /// </summary>
 public partial class Produit
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
     public string Nom { get; set; } = null!;
@@ -20,7 +24,7 @@ public partial class Produit
 
     public decimal PrixUnitaire { get; set; }
 
-    public long Quantite { get; set; }
+    public long Stock { get; set; }
 
     public virtual ICollection<Favori> Favoris { get; set; } = new List<Favori>();
 

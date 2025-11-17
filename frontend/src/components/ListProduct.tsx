@@ -1,12 +1,13 @@
-import { useState, useMemo, ChangeEvent, useEffect } from "react";
+"use client";
+import { useState, useMemo, ChangeEvent, useEffect, useRef } from "react";
 import { ProductsType } from "@/types/utilities";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "./ProductModal";
 import { Search, X, Filter } from "lucide-react";
 import FilterModal from "./FilterModal";
 import { API_URL } from "@/utils/api";
-import toast from "react-hot-toast";
 import { toggleFavorite } from "@/services/profile";
+import toast from "react-hot-toast";
 
 const ListProduct = ({
   onAddItem,
@@ -17,66 +18,80 @@ const ListProduct = ({
   const [selectedProduct, setSelectedProduct] = useState<ProductsType | null>(
     null
   );
-  const [showFilterModal, setShowFilterModal] = useState<boolean>(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
 
+  const toastLock = useRef(false);
+
+  // --- Récupération des produits ---
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          const userId = user.id;
-          const res = await fetch(`${API_URL}/Home/get-products`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ userId }),
-          });
-          if (!res.ok)
-            throw new Error("Erreur lors de la récupération des produits");
-          const data: ProductsType[] = await res.json();
-          setProducts(data);
-        }
+        if (!storedUser) return;
+
+        const user = JSON.parse(storedUser);
+        const res = await fetch(`${API_URL}/Home/get-products`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+
+        if (!res.ok)
+          throw new Error("Erreur lors de la récupération des produits");
+
+        const data: ProductsType[] = await res.json();
+        setProducts(data ?? []);
       } catch (error) {
-        console.log("Erreur lors de la recupération des produits: ", error);
+        console.error("Erreur lors de la récupération des produits:", error);
       }
     };
+
     fetchProducts();
   }, []);
 
-  // --- Récupère toutes les catégories uniques ---
   const categories = useMemo(
     () => [...new Set(products.map((p) => p.category))],
     [products]
   );
 
-  // --- Gère le toggle "favori" ---
-
+  // --- Toggle favoris ---
   const toggleFavoriteHere = async (id: number) => {
     const storedUser = localStorage.getItem("user");
-    if (!storedUser) return toast.error("Utilisateur non connecté");
+    if (!storedUser) return;
 
     const user = JSON.parse(storedUser);
+    let message: string | null = null;
+
     try {
       const result = await toggleFavorite(user.id, id);
+
       setProducts((prev) =>
         prev.map((p) =>
           p.id === id ? { ...p, isFavorite: result.isFavorite } : p
         )
       );
 
-      toast.success(result.message);
+      message = result.isFavorite ? "Ajouté aux favoris" : "Retiré des favoris";
     } catch (error) {
-      toast.error("Erreur lors du changement de favori");
-      console.error(error);
+      console.error("Erreur lors du changement de favori:", error);
+      message = "Erreur lors de la mise à jour du favori";
+    }
+
+    if (message && !toastLock.current) {
+      toastLock.current = true;
+      if (message.includes("Retiré")) {
+        toast.error(message);
+      } else {
+        toast.success(message);
+      }
+      setTimeout(() => (toastLock.current = false), 300);
     }
   };
 
-  // --- Gère le filtre des catégories ---
-  const toggleCategory = (category: string): void => {
+  // --- Gestion recherche ---
+  const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
         ? prev.filter((c) => c !== category)
@@ -84,33 +99,33 @@ const ListProduct = ({
     );
   };
 
-  // --- Gère la recherche ---
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>): void => {
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) =>
     setSearchTerm(e.target.value);
-  };
 
-  const clearSearch = (): void => {
-    setSearchTerm("");
-  };
+  const clearSearch = () => setSearchTerm("");
 
-  // --- Liste filtrée + recherchée ---
+  // --- Filtrage produits ---
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const matchesSearch = p.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
-
       const matchesCategory =
         selectedCategories.length === 0 ||
         selectedCategories.includes(p.category);
-
       return matchesSearch && matchesCategory;
     });
   }, [products, searchTerm, selectedCategories]);
 
+  // --- Ajout panier ---
+  const handleAddToCart = (product: ProductsType, quantity: number) => {
+    if (quantity > product.stock) return;
+    onAddItem(product, quantity);
+  };
+
   return (
     <div className="flex-1">
-      {/* --- Barre de recherche et bouton filtre --- */}
+      {/* Barre de recherche */}
       <div className="flex items-center gap-2 pt-5 px-10 justify-start">
         <div className="relative w-full max-w-md">
           <Search
@@ -132,6 +147,7 @@ const ListProduct = ({
             />
           )}
         </div>
+
         <button
           onClick={() => setShowFilterModal(true)}
           className="px-6 py-3 bg-white border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50"
@@ -146,12 +162,12 @@ const ListProduct = ({
         </button>
       </div>
 
-      {/* --- Liste des produits --- */}
+      {/* Liste de produits */}
       <div className="h-[90%] overflow-y-scroll grid grid-cols-[repeat(auto-fill,minmax(300px,auto))] gap-4 py-10 px-10">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <div
-              className="h-min"
+              className="h-min cursor-pointer"
               key={product.id}
               onClick={() => setSelectedProduct(product)}
             >
@@ -168,16 +184,14 @@ const ListProduct = ({
         )}
       </div>
 
-      {/* --- Modal du produit --- */}
       {selectedProduct && (
         <ProductModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
-          onAddItem={onAddItem}
+          onAddItem={handleAddToCart}
         />
       )}
 
-      {/* --- Modal de filtre --- */}
       <FilterModal
         isOpen={showFilterModal}
         onClose={() => setShowFilterModal(false)}

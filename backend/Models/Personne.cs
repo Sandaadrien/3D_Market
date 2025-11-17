@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Models;
 
@@ -10,8 +8,6 @@ namespace backend.Models;
 /// </summary>
 public partial class Personne
 {
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
     public string Email { get; set; } = null!;
@@ -19,6 +15,8 @@ public partial class Personne
     public string MotDePasse { get; set; } = null!;
 
     public bool IsAdmin { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
 
     public virtual ICollection<Commande> Commandes { get; set; } = new List<Commande>();
 

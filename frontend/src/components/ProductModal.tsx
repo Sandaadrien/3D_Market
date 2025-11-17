@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { ProductsType } from "@/types/utilities";
 import { Canvas } from "@react-three/fiber";
@@ -26,6 +27,25 @@ const ProductModal = ({
     return () => clearTimeout(t);
   }, []);
   const [quantity, setQuantity] = useState(1);
+
+  const handleIncrease = () => {
+    setQuantity((prev) => {
+      if (prev < product.stock) return prev + 1;
+      return prev;
+    });
+  };
+
+  const handleDecrease = () => {
+    setQuantity((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleAdd = () => {
+    if (product.stock === 0) {
+      return;
+    }
+    onAddItem(product, quantity);
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -74,16 +94,20 @@ const ProductModal = ({
             </div>
 
             <p className="text-blue-600 mb-6 text-sm">
-              {" "}
               Category: {product.category}
             </p>
             <p className="text-gray-600 mb-6">{product.description}</p>
-
+            <p className="text-sm text-gray-500 mt-2">
+              Stock disponible : {product.stock}
+            </p>
             <div className="flex gap-4">
               <div className="flex items-center gap-4 bg-gray-100 shadow-sm rounded-lg p-5">
                 <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="hover:text-indigo-600"
+                  onClick={handleDecrease}
+                  disabled={quantity <= 1}
+                  className={`hover:text-indigo-600 ${
+                    quantity <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   <Minus size={20} />
                 </button>
@@ -91,18 +115,25 @@ const ProductModal = ({
                   {quantity}
                 </span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="hover:text-indigo-600"
+                  onClick={handleIncrease}
+                  disabled={quantity >= product.stock}
+                  className={`hover:text-indigo-600 ${
+                    quantity >= product.stock
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                 >
                   <Plus size={20} />
                 </button>
               </div>
               <button
-                onClick={() => {
-                  onAddItem(product, quantity);
-                  onClose();
-                }}
-                className="flex-1 bg-black text-white rounded-lg py-3 font-semibold hover:bg-gray-800"
+                onClick={handleAdd}
+                disabled={product.stock === 0}
+                className={`flex-1 rounded-lg py-3 font-semibold transition ${
+                  product.stock === 0
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
               >
                 Add to Card
               </button>

@@ -61,6 +61,10 @@ public partial class MarketDbContext : DbContext
             entity.Property(e => e.NetAPayer)
                 .HasPrecision(10, 2)
                 .HasColumnName("net_a_payer");
+            entity.Property(e => e.StatutPaiement)
+                .HasMaxLength(20)
+                .HasDefaultValueSql("'EN_ATTENTE'::character varying")
+                .HasColumnName("statut_paiement");
 
             entity.HasOne(d => d.IdClientNavigation).WithMany(p => p.Commandes)
                 .HasForeignKey(d => d.IdClient)
@@ -149,6 +153,10 @@ public partial class MarketDbContext : DbContext
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("nextval('user_id_seq'::regclass)")
                 .HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
             entity.Property(e => e.Email)
                 .HasMaxLength(255)
                 .HasColumnName("email");
@@ -178,9 +186,9 @@ public partial class MarketDbContext : DbContext
             entity.Property(e => e.PrixUnitaire)
                 .HasPrecision(10, 2)
                 .HasColumnName("prix_unitaire");
-            entity.Property(e => e.Quantite)
+            entity.Property(e => e.Stock)
                 .HasDefaultValue(0L)
-                .HasColumnName("quantite");
+                .HasColumnName("stock");
 
             entity.HasOne(d => d.IdCategorieNavigation).WithMany(p => p.Produits)
                 .HasForeignKey(d => d.IdCategorie)

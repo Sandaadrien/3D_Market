@@ -71,7 +71,7 @@ namespace backend.Controllers
             return Ok(new { message = "Inscription réussie !" });
 
         }
-        
+
         [HttpPost("login")]
         public async Task<IActionResult> Connexion([FromBody] ConnexionDTOs request)
         {
@@ -79,8 +79,8 @@ namespace backend.Controllers
                 --> request.user ?? exist
                 --> request.motDePasse ?? marina
             */
-           var user = await _marketDbContext.Personnes
-                .FirstOrDefaultAsync(u => u.Email == request.Email);
+            var user = await _marketDbContext.Personnes
+                 .FirstOrDefaultAsync(u => u.Email == request.Email);
 
             if (user == null)
                 return Unauthorized(new { message = "Identifiants incorrects." });
@@ -96,5 +96,28 @@ namespace backend.Controllers
                 user = new { user.Id, user.Email }
             });
         }
+
+        [HttpGet("client")]
+        public async Task<IActionResult> GetClients()
+        {
+            // Récupère tous les utilisateurs non-admins
+            var clients = await _marketDbContext.Personnes
+                .Where(p => p.IsAdmin == false)
+                .Select(p => new ClientDTOs
+                {
+                    Id = p.Id,
+                    Email = p.Email,
+                    CreatedAt = p.CreatedAt ?? DateTime.Now, // assure-toi que cette colonne existe
+                    OrderCount = _marketDbContext.Commandes
+                        .Count(c => c.IdClient == p.Id),
+                    TotalSpent = _marketDbContext.Commandes
+                        .Where(c => c.IdClient == p.Id)
+                        .Sum(c => (decimal?)c.NetAPayer) ?? 0
+                })
+                .ToListAsync();
+
+            return Ok(clients);
+        }
+
     }
 }

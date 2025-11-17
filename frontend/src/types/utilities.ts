@@ -6,8 +6,14 @@ export interface ProductsType {
   isFavorite: boolean;
   description: string;
   category: string;
-  quantity: number;
+  stock: number;
 }
+
+export type CartItemType = ProductsType & {
+  quantity: number;
+  selected: boolean;
+};
+
 export interface ProductCardsProps {
   product: ProductsType;
 }

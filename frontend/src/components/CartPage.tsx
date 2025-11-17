@@ -2,7 +2,7 @@
 import React, { Suspense, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
-import { ProductsType } from "@/types/utilities";
+import { CartItemType } from "@/types/utilities";
 import { X, Minus, Plus } from "lucide-react";
 
 function ModelPreview({ url }: { url: string }) {
@@ -19,7 +19,7 @@ const CartPage = ({
   onRemoveItem,
   onToggleSelect,
 }: {
-  cartItems: (ProductsType & { quantity: number; selected: boolean })[];
+  cartItems: CartItemType[];
   onUpdateQuantity: (id: number, quantity: number) => void;
   onRemoveItem: (id: number) => void;
   onToggleSelect: (id: number) => void;

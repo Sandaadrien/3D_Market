@@ -15,6 +15,8 @@ public partial class Commande
 
     public bool? EstPaye { get; set; }
 
+    public string? StatutPaiement { get; set; }
+
     public virtual Personne IdClientNavigation { get; set; } = null!;
 
     public virtual ICollection<LigneCommande> LigneCommandes { get; set; } = new List<LigneCommande>();
